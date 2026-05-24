@@ -12,6 +12,11 @@ silver_lecture: 7
 
 # Ch 13. Policy Gradient Methods ⭐⭐⭐
 
+> 🚀 **高阶深读版 jupyter notebook** ：[`../../Code/sutton-barto-2e/ch13-policy-gradient/ch13-policy-gradient.ipynb`](../../Code/sutton-barto-2e/ch13-policy-gradient/ch13-policy-gradient.ipynb)
+>
+> 含完整 PG 定理推导 + sympy 符号验证 + REINFORCE PyTorch 实现 + 数值 baseline 方差对比 + 9 篇核心论文链接 + TRPO/PPO/GRPO/DPO 拓展推导链。
+> 本 md 是闭卷自测用速查卡。
+
 ## 0. 阅读元信息
 
 - **难度**：hard（PG 定理推导是 RL 经典数学难关）
