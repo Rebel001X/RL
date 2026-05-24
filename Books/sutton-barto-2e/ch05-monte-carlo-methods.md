@@ -675,3 +675,35 @@ Importance Sampling
   - Precup, Sutton, Singh 2000 —— Per-decision IS for OPE
   - Glynn 1990 —— Likelihood Ratio Method
   - Jiang & Li 2016 [arXiv 1604.00923](https://arxiv.org/abs/1604.00923) —— Doubly Robust OPE
+
+---
+
+## 💀 Top 3 Gotchas (v4)
+
+> 最容易 fool 学习者的陷阱——面试 / 实战常踩。
+
+### 💀 Gotcha 1：环境 dynamics 在 IS ratio 里**消掉**了
+
+trajectory IS ratio 推导：
+$$
+\rho_{t:T-1} = \prod_{k=t}^{T-1} \frac{\pi(A_k|S_k) \cdot p(S_{k+1}|S_k, A_k)}{b(A_k|S_k) \cdot p(S_{k+1}|S_k, A_k)} = \prod_{k=t}^{T-1} \frac{\pi(A_k|S_k)}{b(A_k|S_k)}
+$$
+
+**`p(s'|s,a)` 在分子分母都出现 → 消掉**——所以 IS **不需要 model**。常见错：把 transition prob 也乘进去，纯多余。
+
+### 💀 Gotcha 2：Ordinary IS 方差**可能无限大**
+
+Ordinary IS 估计是 unbiased，但 $\text{Var}(\rho_{t:T-1} \cdot G_t)$ 在 long horizon 下**爆炸**——一两个极端 ratio (~10^4) 就撕方差。
+
+实战只用 **weighted IS**（虽然有 bias 但 variance 有界，N→∞ 也收敛）。教科书定义先讲 ordinary 不代表 practice 用它。
+
+### 💀 Gotcha 3：MC **不能** continuing task
+
+MC 必须等 $G_t$ 才能 update → 必须 episode 终止 → continuing task **死路**。
+
+如果你 task 是 continuing → 一定走 TD（bootstrap 不需要 terminal）。这就是为什么 robotic continuous control（无终止）几乎都用 SAC/PPO 而不是 MC-based PG。
+
+## 链回
+
+- [[_anki/ch05-mc-cards]] — 35 张卡片版（Anki 复习）
+- [[../../Code/sutton-barto-2e/_v4_notebooks/]] — 数值 trace notebook

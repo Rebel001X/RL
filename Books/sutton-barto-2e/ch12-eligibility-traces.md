@@ -683,3 +683,38 @@ GAE 论文（Schulman 2015）实验扫 λ=0.9, 0.92, 0.95, 0.97, 0.99 在 MuJoCo
 - ShangtongZhang `chapter12/`
 - True Online TD(λ): van Seijen 2014 *True Online TD(λ)*
 - PPO 论文（Schulman 2017）—— 用 GAE
+
+---
+
+## 💀 Top 3 Gotchas (v4)
+
+### 💀 Gotcha 1：eligibility trace 跟 GAE 是**同一个东西**两面
+
+很多人把 ET 跟 GAE 当成两个东西——其实是**同一个 $(\gamma\lambda)^l$ 加权框架**：
+- **ET（mechanism）**: 每 step 把当前 δ 反向传给所有近期 active state——实现层面
+- **λ-return（forward）**: $G^\lambda_t = (1-\lambda) \sum_n \lambda^{n-1} G^{(n)}_t$——理论层面
+- **GAE**: $\hat A^{GAE}_t = \sum_l (\gamma\lambda)^l \delta_{t+l}$——advantage 版
+
+三个公式本质一回事，只是 view 不同。Sutton 12.2 证明 offline 下 ET backward view ≡ forward view λ-return。
+
+### 💀 Gotcha 2：accumulating vs replacing trace 在 NN 上**几乎用不上**
+
+经典 TD(λ) 有 accumulating vs replacing trace 之争（accumulating 在状态重复访问时累加，replacing 只置 1）—— 但在 **NN FA** 里 trace 是参数空间的 gradient trace，**没有清晰的 accumulating vs replacing 概念**。
+
+实战 deep RL 几乎不用 TD(λ)（用 n-step 或 GAE 替代）—— ET 主要是 linear FA 故事 + 历史价值。**别在 NN paper 里找 accumulating trace 的影子**。
+
+### 💀 Gotcha 3：GAE λ=0.95 是**经验**最优，不是数学最优
+
+PPO 实战默认 λ=0.95——这是 OpenAI/DeepMind 在大量 Atari / MuJoCo task 上实测的 sweet spot，**不是**理论推导。
+
+不同 task 上最优 λ 不同：
+- **短 horizon** + **高频 reward** → 低 λ（0.5-0.9）够，方差小收敛快
+- **长 horizon** + **稀疏 reward** → 高 λ（0.95-0.99），需要长程信号
+- **continuing task** → λ 必须 < 1（不然累积爆炸）
+
+新 task 上一般 sweep λ ∈ {0.9, 0.95, 0.99}——不要无脑 0.95。
+
+## 链回
+
+- [[_anki/ch12-gae-cards]] — 35 张卡片版
+- [[../../Code/sutton-barto-2e/_v4_notebooks/ch12-gae-step-by-step.ipynb]] — GAE 手算 trace

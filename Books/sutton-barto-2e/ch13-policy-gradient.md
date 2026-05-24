@@ -1236,3 +1236,50 @@ RLVR：reward = 规则验证，跳过 RM。
   - DeepSeek R1：[2024 arXiv 2501.12948](https://arxiv.org/abs/2501.12948)
   - SAC：[Haarnoja 2018 arXiv 1801.01290](https://arxiv.org/abs/1801.01290)
 - 实现参考：ShangtongZhang `chapter13/`、CleanRL、TRL、verl、OpenRLHF
+
+---
+
+## 💀 Top 3 Gotchas (v4)
+
+### 💀 Gotcha 1：PPO clip 的 **min** 跟 **max** 不要写反
+
+完整 PPO clip loss:
+$$
+L^{CLIP}(\theta) = \hat{\mathbb{E}}_t\left[\min\left(r_t(\theta) \hat A_t,\ \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon) \hat A_t\right)\right]
+$$
+
+**关键是 `min`**——不是 `max`。`min` 让 clip **只在 advantage 跟 r 同号且 r 偏离时**生效（pessimistic bound）：
+- $\hat A > 0$ → 我们想 push r 更大；如果 r 已经 > 1+ε，clip 把它压回 → `min` 取被压版（保守）
+- $\hat A < 0$ → 我们想 push r 更小；如果 r 已经 < 1-ε，clip 把它顶回 → `min` 取被顶版（保守）
+
+**反过来写 max 就是 anti-PPO**——会鼓励 ratio 偏离，立即崩。手撕公式时这点必须清晰。
+
+### 💀 Gotcha 2：GRPO 的 advantage **不是** Q - V
+
+GRPO 没有 critic，所以**没有 V**——它的 advantage 是 **group-relative reward normalization**：
+$$
+\hat A_i = \frac{r_i - \text{mean}(r_{\text{group}})}{\text{std}(r_{\text{group}})}
+$$
+
+其中 group 是**同一个 prompt 多次 sample 的 N 个 response 组**。
+
+常见错：把 GRPO 当 PPO 的 critic-free 版本，误以为还在算 $Q - V$——**完全不是**。GRPO 的 baseline 来自 group 内统计，是 MC baseline 的特化形式。
+
+→ 这就是 GRPO 在 RLHF 中跟 PPO 拼内存优势的根：省掉 V critic 网络（约一半参数）。
+
+### 💀 Gotcha 3：DPO 看似"简单"但**只能从静态 preference 学**
+
+DPO 看上去全是 supervised loss、超级稳——但它本质是 **offline RL**：
+- 不能在线 explore
+- 训练分布 = preference 数据分布，**离它太远的 policy 信号弱**
+- 如果 preference 数据有 bias / mode collapse → policy 也会 inherit
+
+PPO 是 **online**（每次 update 都用最新 policy 采样）→ 能持续探索新空间；DPO 一旦数据定下来，policy **只能在数据 manifold 周围学**。
+
+→ 现状：业界 PPO/GRPO 跟 DPO/SimPO/KTO **并存**。reasoning task / 工业 RLHF（Anthropic / OpenAI / DeepSeek）大多 PPO 系；学术 / 简洁部署偏 DPO 系。
+
+## 链回
+
+- [[_anki/ch13-pg-cards]] — 42 张卡片版（全 deck 最重）
+- [[../../Code/sutton-barto-2e/_v4_notebooks/ch13-reinforce-vs-baseline-cartpole.ipynb]] — REINFORCE ± baseline 方差对比
+- [[ch12-eligibility-traces]] / [[_anki/ch12-gae-cards]] — GAE 是 §3.6 的 advantage estimator

@@ -704,3 +704,40 @@ Tabular Q-learning 用 fixed α；DQN 多用 RMSProp（Mnih 2015 默认）。Ada
   - Bradtke & Barto 1996 LSTD
   - Albus 1975 CMAC（tile coding 前身）
   - Mnih 2015 Nature DQN
+
+---
+
+## 💀 Top 3 Gotchas (v4)
+
+### 💀 Gotcha 1：semi-gradient ≠ true gradient
+
+True gradient TD 应该对 target 也求导（target 含 $\hat v(S', w)$ 也依赖 $w$）—— 双 gradient。
+
+Semi-gradient **故意忽略 target 对 $w$ 的依赖**：
+$$w \leftarrow w + \alpha \cdot \delta_t \cdot \nabla \hat v(S_t, w)$$
+
+→ **不是真梯度** → 没有保证下降的 loss landscape → **可能发散**（Baird counterexample）。
+
+但 semi-gradient 实际比 true-gradient 更 work——真梯度的 Residual gradient 算法收敛到 minimize Bellman residual 的 fixed point，**不是 V_π**，更差。
+
+### 💀 Gotcha 2：linear FA + TD fixed point ≠ V_π 最优
+
+linear FA + on-policy + Robbins-Monro 步长 → 收敛到 **TD fixed point**——但 **不是** $V_\pi$！
+
+TD fixed point 是 **MSPBE**（Projected Bellman Error）的 minimizer，跟 **VE**（true value error）的 minimizer **不同**。它们的差距取决于 feature 表达能力 → approximation error gap。
+
+实战意思：即使你 feature 设计得能完美表达 $V_\pi$，TD 可能也收敛不到（只到投影后的 fixed point）。
+
+### 💀 Gotcha 3：tile coding 工业上比 RBF / polynomial 强
+
+经典 feature 选择：
+- ❌ **Polynomial**: 高阶多项式在 RL state 上**泛化差**（局部支持没保证）
+- ⚠️ **RBF**: 平滑但 $\sigma$ 难调，新 domain 上需要重 tune
+- ✅ **Tile coding**: 稀疏 + 局部 + 分辨率可控 + 计算便宜——Sutton 推荐 baseline
+
+实战 linear FA 几乎都用 tile coding（Mountain Car、Acrobot 经典基线）；现在 deep RL 一般跳过 linear，直接 NN，但理解 tile coding 让你懂"为什么 NN 比 linear 好（自动学 feature）"。
+
+## 链回
+
+- [[_anki/ch09-fa-cards]] — 35 张卡片版
+- [[ch11-off-policy-methods]] — 看 Baird 反例（FA + 真发散的具体例子）
