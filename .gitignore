@@ -1,0 +1,40 @@
+# 大文件：教科书 PDF / EPUB 不入 git
+*.pdf
+*.epub
+*.mobi
+
+# Windows 系统文件
+desktop.ini
+Thumbs.db
+*.lnk
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# 临时
+*.log
+*.tmp
+.DS_Store
+
+# 模型 / 权重 / 数据（如果以后训 RL 加进来）
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+checkpoints/
+runs/
+wandb/
+data/raw/
