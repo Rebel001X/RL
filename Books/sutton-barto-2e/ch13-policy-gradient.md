@@ -12,10 +12,60 @@ silver_lecture: 7
 
 # Ch 13. Policy Gradient Methods ⭐⭐⭐
 
-> 🚀 **高阶深读版 jupyter notebook** ：[`../../Code/sutton-barto-2e/ch13-policy-gradient/ch13-policy-gradient.ipynb`](../../Code/sutton-barto-2e/ch13-policy-gradient/ch13-policy-gradient.ipynb)
+> 🚀 **高阶深读版 jupyter notebook** ：[[../../Code/sutton-barto-2e/ch13-policy-gradient/ch13-policy-gradient.ipynb|ch13.ipynb]]
 >
 > 含完整 PG 定理推导 + sympy 符号验证 + REINFORCE PyTorch 实现 + 数值 baseline 方差对比 + 9 篇核心论文链接 + TRPO/PPO/GRPO/DPO 拓展推导链。
 > 本 md 是闭卷自测用速查卡。
+
+---
+
+## 📋 本章讲了什么（TL;DR）
+
+**3 句话总览**：
+
+1. **从 value-based 转向 policy-based**：不再学 Q(s,a) 再 derive policy，而是直接参数化 π_θ(a|s) 并沿 J(θ) 梯度上升——这是 RL 的另一支主流路线
+2. **Policy Gradient Theorem**（§13.2）是本章核心数学结果：$∇J = E_π[∇\log π · Q^π]$——**state distribution μ 不出现在梯度里**，让 sample-based 估计成为可能
+3. **REINFORCE → Actor-Critic → TRPO → PPO → GRPO/DPO**：所有现代 LLM 后训练算法都从本章公式派生
+
+**为什么这章是 RL 圣经第一章**（个人观点）：S&B 17 章里只有 Ch 3（MDP）和 Ch 13（PG）是真正"绕不开"的——前者是语言，后者是 LLM 时代的 RL 入口。
+
+---
+
+## 🎯 Top 5 关键洞察
+
+> 闭卷应该能复述这 5 点 + 各自的"为什么"。
+
+| # | 洞察 | 为什么关键 |
+|---|---|---|
+| 1 | **Score function trick**：$∇π = π · ∇\log π$ | 把"对 π 求导"变成"对 log π 求导 + 当 expectation"——sample-based PG 的根技 |
+| 2 | **State distribution μ_π 不显式出现** | Rollout 样本天然按 μ 分布，所以 sample 平均就是 ∇J 的无偏估计——这是 Sutton 1999 的革命 |
+| 3 | **Baseline 不变 unbiasedness** | 任意 b(s) 都能减——因为 $E_a[∇\log π · b(s)] = b(s) \nabla\sum_a π = b·∇1 = 0$。**降方差不要钱** |
+| 4 | **PG 绕开 max → 绕开 deadly triad** | value-based + off-policy + FA = 可能发散（[[ch11-off-policy-methods]]）；PG 不取 max，对 NN 更友好 |
+| 5 | **PPO clip 是 trust region 的工程化** | TRPO 的 KL hard constraint → PPO 的 ratio clip 软约束——损失理论严格性换实现简洁，**这是 RLHF 工业标准** |
+
+---
+
+## 🧭 在 Obsidian graph 中的位置
+
+本章是 RL vault 的**第一中心节点**（Ch 3 是第二）。打开 graph view 应该看到 Ch 13 连出大量边：
+
+**上游**（前置）：
+- [[ch03-finite-mdps]]（MDP 形式化）
+- [[ch05-monte-carlo-methods]]（importance sampling，PPO ratio 的根）
+- [[ch09-on-policy-prediction]]（function approximation，PG 的 NN 化）
+- [[ch12-eligibility-traces]]（GAE 直接前置）
+
+**横向**（同层并列）：
+- [[ch11-off-policy-methods]]（PG 是绕开 deadly triad 的另一支）
+
+**下游**（应用）：
+- [[../../../brain/Areas/rl-books/rlhf-lambert/ch06-reinforcement-learning|RLHF Book Ch 6]]（PPO for LLM）
+- [[../../../brain/Areas/rl-books/rlhf-lambert/ch08-direct-alignment-algorithms|RLHF Book Ch 8 DPO]]
+- [[../../../brain/Slipbox/inference-metrics-ttft-tpot]]（RLHF 训练 rollout 用 inference infra）
+
+**brain vault first-pass**：[[../../../brain/Areas/rl-books/sutton-barto-2e/ch01-introduction|brain Ch 1（first-pass）]]（Ch 13 first-pass 待写）
+
+---
 
 ## 0. 阅读元信息
 
@@ -206,6 +256,98 @@ for iter:
 - [ ] 实现 REINFORCE on CartPole 跑通
 - [ ] **写出 PPO loss 公式并指出每个组件来自 S&B 哪一章**
 - [ ] 答 Q1-Q10 至少 6 个
+
+---
+
+## 💡 拓展知识点（书外 trivia）
+
+> 这一段是"读完本章后，吹牛的本钱"——书没写但 RLHF 圈子都知道的。
+
+### A. PG 是怎么从冷门变成 LLM 时代主角的
+
+- **1992 Williams REINFORCE 论文**当年只有几十引用——neural net 都不流行
+- **1999 Sutton PG Theorem** 也是不温不火——deep learning 还没起
+- **2013 Mnih DQN** 让 value-based 出圈，但很快**2015 Schulman 系列 (TRPO + GAE)** 让 PG 反超
+- **2017 PPO** 论文+OpenAI Gym benchmark → 工业标准
+- **2022 InstructGPT/ChatGPT** → PG 成了 LLM 后训练唯一标准（直到 DPO 出现）
+- **2024 GRPO + DeepSeek R1** → PG 复兴在 reasoning model
+
+**洞察**：技术不是"对就胜出"，是要等到合适的应用场景。PG 等了 30 年。
+
+### A.1 Sutton 1999 论文的现场反响
+
+据 RLDM 老人回忆——那篇 NeurIPS 论文当年现场反应平平，没人意识到二十年后它会驱动 OpenAI 估值千亿。Sutton 本人在 2017 年 reddit AMA 里说："I didn't realize it would become this important."
+
+### B. Score Function Trick 的其它名字
+
+同一个东西在不同领域不同名字：
+- **统计**：Score function（Fisher information 的根）
+- **OR / Simulation**：Likelihood ratio estimator（Glynn 1990）
+- **RL**：REINFORCE estimator
+- **VAE**：reparameterization 之外的 SF estimator（用于 discrete latent）
+- **NAS**：search policy 用 RL 时也是这套
+
+**结论**：score function trick 是统计学里的"勾股定理"——多次被独立发现。
+
+### C. PG 在 RL 之外的应用
+
+| 领域 | 用法 |
+|---|---|
+| **GAN training** | discriminator → reward，generator → policy，但实际用 BP 而非 PG |
+| **NAS（神经网络结构搜索）** | controller 是 policy，validation acc 是 reward — Zoph 2016 |
+| **超参调优** | autoML 用 RL 选超参 — Google Vizier |
+| **数据增广** | AutoAugment 用 PG 学最优增广 policy |
+| **分子设计** | RL for drug discovery — 化学结构是 action |
+| **网络协议** | TCP congestion control 用 RL 学 — Pantheon |
+| **LLM tool use** | tool calling policy 是 PG 训出来的 — Toolformer |
+
+### D. 一个被低估的细节：γ^t in REINFORCE
+
+S&B 算法里 REINFORCE 的更新是 `θ += α γ^t G_t ∇log π`——**很多实现忘了 γ^t**。理论上必须（episodic discounted），实践上经常省略且没大影响。
+
+**RLHF 里通常 γ=1**，所以这个 trick 不显著。但是对短-episode 任务（CartPole γ=0.99）忽略 γ^t 会让早 steps 权重过大。**面试 trap**。
+
+### E. Vanishing variance 现象
+
+PPO 训稳后，advantage 接近 0，gradient 信号变弱——容易过早收敛到次优。**解决**：reward shaping / entropy bonus / 周期性 reset critic。这是 PPO 实际部署的隐藏痛点。
+
+### F. 为什么 LLM RLHF 不用 SAC / TD3 这些"现代"算法
+
+- **SAC** 设计给 continuous action（机器人控制）；LLM 是 discrete token，离散版 SAC 不主流
+- **TD3** 强调 deterministic policy + twin critic；LLM 必须 stochastic（多样性 + exploration）
+- **PPO** 在 discrete + 大 action space + 稀疏 reward 场景仍最稳——所以是 RLHF 默认
+
+### G. RLVR 的"反 RLHF"哲学
+
+传统 RLHF：RM 是核心，但容易 reward hacking。
+**RLVR**（DeepSeek R1 路线）：reward 来自**可验证规则**（数学对错 / 代码 unit test），跳过 RM。
+**新趋势**：reasoning model 用 RLVR + GRPO 训长 CoT，让模型"自己想自己验证"。
+
+这是 2024-2026 RL 最有意思的方向——**reward source 革命**。
+
+### H. PG 跟 backprop 是什么关系？
+
+- **backprop** = 算梯度的算法（chain rule）
+- **PG** = 用 backprop 来估计 ∇J 的"trick"（特别 score function trick）
+
+混淆点：很多人以为 "PPO = 用 PG 训 LLM"。**更准确**：PPO 用 backprop 算 ∇log π，然后乘以 advantage 当 reward signal——backprop 是工具，PG 是公式。
+
+---
+
+## 🔗 更多 wikilinks（深挖）
+
+| 主题 | 跳转 |
+|---|---|
+| RLHF 训练 pipeline 全图 | [[../../../brain/Areas/rl-books/rlhf-lambert/ch03-training-overview]] |
+| Reward Modeling 数学 | [[../../../brain/Areas/rl-books/rlhf-lambert/ch05-reward-modeling]] |
+| 推理时的 reasoning model（reasoning RL）| [[../../../brain/Areas/rl-books/rlhf-lambert/ch07-reasoning-inference-time-scaling]] |
+| Direct Alignment (DPO/IPO/KTO)| [[../../../brain/Areas/rl-books/rlhf-lambert/ch08-direct-alignment-algorithms]] |
+| Over-optimization / reward hacking | [[../../../brain/Areas/rl-books/rlhf-lambert/ch16-over-optimization]] |
+| RLHF 评测 | [[../../../brain/Areas/rl-books/rlhf-lambert/ch17-evaluation]] |
+| AI-Infra: PPO rollout 与推理引擎 | [[../../../brain/Slipbox/inference-metrics-ttft-tpot]] [[../../../brain/Slipbox/prefill-decode-disaggregation]] |
+| AI-Infra: FP8 训练（RLHF 训练也用）| [[../../../brain/Slipbox/fp8-training-pipeline]] |
+| 面试系统设计：PPO rollout 服务 | [[../../../brain/Areas/ai-infra/_system-design]] |
+| DeepSeek V3 技术报告（GRPO 来源）| [[../../../brain/Papers/arxiv-2412.19437]] |
 
 ## Related
 
