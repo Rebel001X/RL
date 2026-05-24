@@ -2,6 +2,10 @@
 
 This is an Obsidian vault + git repo for my Reinforcement Learning learning workspace. When invoked here, follow these rules.
 
+## 🎯 当前主攻
+
+**Sutton & Barto 2nd edition**（8 周深读中）—— 见 `Books/sutton-barto-2e/_reading-guide.md` 8 周日程表。配套 ShangtongZhang 代码 + David Silver UCL 2015。
+
 ## Purpose
 
 - **Code experiments**: DQN/PPO/GRPO impl, paper reproductions → `Code/`

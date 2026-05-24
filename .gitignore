@@ -36,6 +36,10 @@ env/
 .obsidian/plugins/*/data.json
 .trash/
 
+# Obsidian Bases — 未命名工作文件
+未命名*.base
+Untitled*.base
+
 # 模型 / 权重 / 数据（如果以后训 RL 加进来）
 *.pth
 *.pt

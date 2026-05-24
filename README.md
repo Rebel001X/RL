@@ -9,7 +9,7 @@
 | 书 | 状态 |
 |---|---|
 | RLHF Book (Lambert) | ✅ 18 章笔记完成（在 brain vault）|
-| Sutton & Barto 2e | 🚧 Ch 1 完成 |
+| Sutton & Barto 2e | 🚧 **主攻中**：reading guide + Ch 1-3 完成（见 `Books/sutton-barto-2e/`）|
 | Deep RL Hands-On (Lapan) 3rd | 🚧 Ch 1 完成 |
 | Distributional RL (Bellemare) | 🚧 Ch 1 完成 |
 | 其它 8 本 | 暂未处理 |
