@@ -29,6 +29,13 @@ env/
 *.tmp
 .DS_Store
 
+# Obsidian — 不入 git 的部分（保留 workspace state 在本地）
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+.obsidian/plugins/*/data.json
+.trash/
+
 # 模型 / 权重 / 数据（如果以后训 RL 加进来）
 *.pth
 *.pt
